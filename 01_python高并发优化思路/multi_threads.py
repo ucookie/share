@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
-import time
-import multiprocessing
 
-# 定义全局变量Queue
-QUEUE = multiprocessing.Manager().Queue()
+import time
+import threading
+
+QUEUE = list()
 
 def fibonacci(n):
     '''斐波拉数列'''
@@ -17,15 +17,13 @@ def fibonacci(n):
 
 def init_queue():
     '''初始化队列'''
-    while not QUEUE.empty():
-        QUEUE.get()
-    for _index in range(10):
-        QUEUE.put(_index)
+    global QUEUE
+    QUEUE = list(range(10))[::-1]
 
 def task():
-    while not QUEUE.empty():
+    while len(QUEUE) != 0:
         try:
-            data = QUEUE.get(block=True, timeout=1)
+            data = QUEUE.pop()
             print('work', data, 'start', end=' -> ')
             fibonacci(34)
             print('end')
@@ -33,22 +31,28 @@ def task():
             print(str(ex))
 
 if __name__ == "__main__":
-    print('单进程测试开始')
+    print('单线程测试开始')
     init_queue()
     start_time = time.time()
-    task()
+    th = threading.Thread(target=task)
+    th.start()
+    th.join()
     single_time = time.time() - start_time
 
-    print('\n多进程测试开始')
+    print('\n多线程测试开始')
     init_queue()
     start_time = time.time()
-    number = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(number)
-    for i in range(number):
-        pool.apply_async(task)
-    pool.close()
-    pool.join()
+
+    thread_list = list()
+    for i in range(4):
+        th = threading.Thread(target=task)
+        th.start()
+        thread_list.append(th)
+
+    for t in thread_list:
+        t.join()
+
     multi_time = time.time() - start_time
 
-    print("单进程执行：", single_time)
+    print("单线程执行：", single_time)
     print("多进程执行：", multi_time)
