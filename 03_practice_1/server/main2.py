@@ -1,5 +1,6 @@
+# file: main2.py
+import io
 import web
-from io import BufferedRandom
 
 urls = (
     "/healthz", "healthz",
@@ -8,14 +9,12 @@ urls = (
 class healthz:
     def GET(self):
         return 'ok'
+
 class classify:
     def POST(self):
-        # web.header('Content-Type', 'text/plain')
         form = web.input(image={})
-        print(form['image'].filename, type(form['image'].file))
-        img_byte = BufferedRandom.read(form['image'].file)
-        with open('image.jpg', 'wb') as f:
-            f.write(img_byte)
+        img_byte = io.BytesIO.read(form['image'].file)
+        print(img_byte)
         return 'ok'
 
 class MyApplication(web.application):
